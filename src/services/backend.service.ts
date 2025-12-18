@@ -18,45 +18,45 @@ export interface Vehicle {
   providedIn: 'root'
 })
 export class BackendService {
-  // Updated key to denote persistent storage requirement
+  // Key for persistent local storage
   private readonly DB_KEY = 'IMPERIAL_FLEET_DATA_PERSISTENT';
-  private readonly LATENCY_MS = 600;
+  // Reduced latency for snappier load times while maintaining "uplink" feel
+  private readonly LATENCY_MS = 400;
 
   constructor() {}
 
   async getVehicles(): Promise<Vehicle[]> {
     await this.delay();
-    const data = localStorage.getItem(this.DB_KEY);
-    return data ? JSON.parse(data) : [];
+    return this.getInternalSafe();
   }
 
   async createVehicle(vehicle: Vehicle): Promise<Vehicle> {
     await this.delay();
-    const current = await this.getInternal();
+    const current = this.getInternalSafe();
     const updated = [vehicle, ...current];
-    this.saveInternal(updated);
+    this.saveInternalSafe(updated);
     return vehicle;
   }
 
   async deleteVehicle(id: string): Promise<void> {
     await this.delay();
-    const current = await this.getInternal();
+    const current = this.getInternalSafe();
     const updated = current.filter(v => v.id !== id);
-    this.saveInternal(updated);
+    this.saveInternalSafe(updated);
   }
 
   async updateVehicle(updatedVehicle: Vehicle): Promise<void> {
     await this.delay();
-    const current = await this.getInternal();
+    const current = this.getInternalSafe();
     const updated = current.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
-    this.saveInternal(updated);
+    this.saveInternalSafe(updated);
   }
 
   async updateVehicleStatus(id: string, status: Vehicle['status']): Promise<void> {
     await this.delay();
-    const current = await this.getInternal();
+    const current = this.getInternalSafe();
     const updated = current.map(v => v.id === id ? { ...v, status } : v);
-    this.saveInternal(updated);
+    this.saveInternalSafe(updated);
   }
 
   // Backup Protocol: Retrieve raw JSON string
@@ -64,28 +64,60 @@ export class BackendService {
     return localStorage.getItem(this.DB_KEY) || '[]';
   }
 
-  // Restore Protocol: Overwrite DB with validated JSON
+  // Restore Protocol: Overwrite DB with validated JSON and Schema Check
   importData(jsonData: string): void {
     try {
       const parsed = JSON.parse(jsonData);
-      if (Array.isArray(parsed)) {
-        this.saveInternal(parsed);
-      } else {
-        throw new Error('Invalid Data Structure');
+      
+      // 1. Structure Check
+      if (!Array.isArray(parsed)) {
+        throw new Error('Invalid Protocol: Root must be an array.');
       }
+
+      // 2. Schema Validation (Basic Check)
+      const isValid = parsed.every((v: any) => 
+        v.id && 
+        v.designation && 
+        v.serialNumber && 
+        v.status
+      );
+
+      if (!isValid) {
+        throw new Error('Corrupt Intel: Data schema mismatch.');
+      }
+
+      this.saveInternalSafe(parsed);
     } catch (e) {
-      throw new Error('Data Corruption Detected');
+      console.error('Import Failed:', e);
+      throw new Error('Data Corruption Detected during Import.');
     }
   }
 
-  private async getInternal(): Promise<Vehicle[]> {
-    const data = localStorage.getItem(this.DB_KEY);
-    return data ? JSON.parse(data) : [];
+  // === SAFE STORAGE INTERFACE ===
+
+  private getInternalSafe(): Vehicle[] {
+    try {
+      const data = localStorage.getItem(this.DB_KEY);
+      if (!data) return [];
+      
+      const parsed = JSON.parse(data);
+      // Ensure we actually got an array, otherwise reset to avoid app crash
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error('Imperial Archives Corrupted. Re-initializing database.', e);
+      return [];
+    }
   }
 
-  private saveInternal(data: Vehicle[]): void {
-    // This is the critical line that persists data to the machine's drive
-    localStorage.setItem(this.DB_KEY, JSON.stringify(data));
+  private saveInternalSafe(data: Vehicle[]): void {
+    try {
+      // This write persists to the physical disk (browser storage)
+      // Data survives restarts and shutdowns.
+      const serialized = JSON.stringify(data);
+      localStorage.setItem(this.DB_KEY, serialized);
+    } catch (e) {
+      console.error('CRITICAL ERROR: Storage Write Failed. Quota exceeded or permission denied.', e);
+    }
   }
 
   private delay(): Promise<void> {
