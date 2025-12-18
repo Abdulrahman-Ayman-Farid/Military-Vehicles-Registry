@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormControl, FormGroup } from '@angular/forms';
 import { FleetService, Vehicle } from './services/fleet.service';
 
 @Component({
@@ -168,13 +168,20 @@ import { FleetService, Vehicle } from './services/fleet.service';
             </form>
           </div>
 
-          <!-- Simplified Stats -->
-          <div class="bg-gradient-to-r from-[#141210] to-[#1c1917] border border-[#292524] p-6 flex items-center justify-between shadow-lg">
-            <div class="flex flex-col gap-1">
-              <span class="text-[10px] uppercase text-[#a8a29e] tracking-widest">Total Fleet Strength</span>
-              <span class="text-lg font-arabic font-bold text-[#e7e5e4]">إجمالي الأسطول</span>
+          <!-- Stats -->
+          <div class="bg-gradient-to-r from-[#141210] to-[#1c1917] border border-[#292524] p-6 flex flex-col gap-4 shadow-lg">
+            <div class="flex items-center justify-between border-b border-[#292524] pb-2">
+               <div class="flex flex-col gap-0.5">
+                  <span class="text-[10px] uppercase text-[#a8a29e] tracking-widest">Fleet Strength</span>
+                  <span class="text-xs font-arabic font-bold text-[#78716c]">إجمالي الأسطول</span>
+               </div>
+               <div class="text-3xl font-egypt text-[#d4af37]">{{ filteredVehicles().length }}</div>
             </div>
-            <div class="text-4xl font-egypt text-[#d4af37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">{{ filteredVehicles().length }}</div>
+             <div class="flex justify-between items-center text-xs">
+                 <span class="text-emerald-500 font-bold">READY: {{ getCount('ACTIVE') }}</span>
+                 <span class="text-[#d4af37] font-bold">DEPL: {{ getCount('DEPLOYED') }}</span>
+                 <span class="text-rose-500 font-bold">MAINT: {{ getCount('MAINTENANCE') }}</span>
+             </div>
           </div>
 
         </div>
@@ -182,12 +189,70 @@ import { FleetService, Vehicle } from './services/fleet.service';
         <!-- Main Content: List -->
         <div class="lg:col-span-8">
           
-          <div class="flex items-center justify-between mb-8 pb-4 border-b border-[#d4af37]/30">
-            <div class="flex items-center gap-3">
-              <div class="w-1.5 h-6 bg-[#d4af37]"></div>
-              <h2 class="text-base font-bold uppercase tracking-widest text-[#e7e5e4]">Active Registry</h2>
-            </div>
-            <span class="text-xl font-arabic font-bold text-[#d4af37]">الوحدات النشطة</span>
+          <!-- Tactical Controls Header -->
+          <div class="mb-6 space-y-4">
+             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#d4af37]/30 pb-4">
+               <div class="flex items-center gap-3">
+                 <div class="w-1.5 h-8 bg-[#d4af37]"></div>
+                 <div>
+                   <h2 class="text-base font-bold uppercase tracking-widest text-[#e7e5e4]">Tactical View</h2>
+                   <div class="text-sm font-arabic font-bold text-[#d4af37]">العرض التكتيكي</div>
+                 </div>
+               </div>
+
+               <!-- Sorting -->
+               <div class="flex items-center gap-2">
+                 <span class="text-[10px] uppercase text-[#78716c] tracking-widest">Sort By / ترتيب</span>
+                 <select 
+                  [value]="sortBy()"
+                  (change)="setSort($any($event.target).value)"
+                  class="bg-[#141210] border border-[#292524] text-[#d4af37] text-xs font-bold uppercase px-2 py-1 focus:outline-none focus:border-[#d4af37] cursor-pointer"
+                 >
+                   <option value="ID">ID / المعرف</option>
+                   <option value="FUEL_LOW">Low Fuel / وقود منخفض</option>
+                   <option value="TYPE">Class / الفئة</option>
+                 </select>
+               </div>
+             </div>
+
+             <!-- Categories / Tabs -->
+             <div class="flex flex-wrap gap-2">
+                <button 
+                  (click)="setFilter('ALL')"
+                  class="px-4 py-2 border text-xs font-bold uppercase tracking-wider transition-all flex flex-col items-center gap-1 min-w-[80px]"
+                  [class]="filterStatus() === 'ALL' ? 'bg-[#d4af37] text-black border-[#d4af37]' : 'bg-[#141210] text-[#78716c] border-[#292524] hover:border-[#d4af37]/50'"
+                >
+                  <span>ALL</span>
+                  <span class="font-arabic text-[10px]">الكل</span>
+                </button>
+
+                <button 
+                  (click)="setFilter('ACTIVE')"
+                  class="px-4 py-2 border text-xs font-bold uppercase tracking-wider transition-all flex flex-col items-center gap-1 min-w-[80px]"
+                   [class]="filterStatus() === 'ACTIVE' ? 'bg-cyan-900/40 text-cyan-400 border-cyan-500' : 'bg-[#141210] text-[#78716c] border-[#292524] hover:text-cyan-400'"
+                >
+                  <span>Active</span>
+                  <span class="font-arabic text-[10px]">نشط</span>
+                </button>
+
+                <button 
+                   (click)="setFilter('DEPLOYED')"
+                   class="px-4 py-2 border text-xs font-bold uppercase tracking-wider transition-all flex flex-col items-center gap-1 min-w-[80px]"
+                   [class]="filterStatus() === 'DEPLOYED' ? 'bg-amber-900/40 text-amber-400 border-amber-500' : 'bg-[#141210] text-[#78716c] border-[#292524] hover:text-amber-400'"
+                >
+                  <span>Deployed</span>
+                  <span class="font-arabic text-[10px]">منتشر</span>
+                </button>
+
+                <button 
+                   (click)="setFilter('MAINTENANCE')"
+                   class="px-4 py-2 border text-xs font-bold uppercase tracking-wider transition-all flex flex-col items-center gap-1 min-w-[80px]"
+                   [class]="filterStatus() === 'MAINTENANCE' ? 'bg-rose-900/40 text-rose-400 border-rose-500' : 'bg-[#141210] text-[#78716c] border-[#292524] hover:text-rose-400'"
+                >
+                  <span>Maint</span>
+                  <span class="font-arabic text-[10px]">صيانة</span>
+                </button>
+             </div>
           </div>
 
           <div class="space-y-6">
@@ -384,6 +449,10 @@ export class AppComponent {
   isLoading = this.fleetService.isLoading;
   searchControl = new FormControl('');
   searchTerm = signal('');
+  
+  // Categorization and Sorting
+  filterStatus = signal<'ALL' | 'ACTIVE' | 'DEPLOYED' | 'MAINTENANCE'>('ALL');
+  sortBy = signal<'ID' | 'FUEL_LOW' | 'TYPE'>('ID');
 
   // Add Vehicle Form
   addForm = this.fb.group({
@@ -412,18 +481,48 @@ export class AppComponent {
   }
 
   filteredVehicles = computed(() => {
+    let vehicles = this.fleetService.vehicles();
     const term = this.searchTerm().toLowerCase();
-    const allVehicles = this.fleetService.vehicles();
+    const filter = this.filterStatus();
+    const sort = this.sortBy();
 
-    if (!term) return allVehicles;
+    // 1. Filter by Status
+    if (filter !== 'ALL') {
+      vehicles = vehicles.filter(v => v.status === filter);
+    }
 
-    return allVehicles.filter(v => 
-      v.designation.toLowerCase().includes(term) || 
-      v.type.toLowerCase().includes(term) ||
-      v.serialNumber.toLowerCase().includes(term) ||
-      v.operator.toLowerCase().includes(term)
-    );
+    // 2. Filter by Search
+    if (term) {
+      vehicles = vehicles.filter(v => 
+        v.designation.toLowerCase().includes(term) || 
+        v.type.toLowerCase().includes(term) ||
+        v.serialNumber.toLowerCase().includes(term) ||
+        v.operator.toLowerCase().includes(term)
+      );
+    }
+
+    // 3. Sort
+    return vehicles.sort((a, b) => {
+      switch (sort) {
+        case 'FUEL_LOW': return a.fuelLevel - b.fuelLevel; // Ascending Fuel (Lowest first)
+        case 'TYPE': return a.type.localeCompare(b.type);
+        case 'ID': 
+        default: return a.serialNumber.localeCompare(b.serialNumber);
+      }
+    });
   });
+
+  setFilter(status: 'ALL' | 'ACTIVE' | 'DEPLOYED' | 'MAINTENANCE'): void {
+    this.filterStatus.set(status);
+  }
+
+  setSort(sort: 'ID' | 'FUEL_LOW' | 'TYPE'): void {
+    this.sortBy.set(sort);
+  }
+
+  getCount(status: string): number {
+    return this.fleetService.vehicles().filter(v => v.status === status).length;
+  }
 
   async onSubmit() {
     if (this.addForm.valid && !this.isLoading()) {
