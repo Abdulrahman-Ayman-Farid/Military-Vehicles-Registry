@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormControl, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { FleetService, Vehicle } from './services/fleet.service';
 
 @Component({
@@ -24,11 +24,9 @@ import { FleetService, Vehicle } from './services/fleet.service';
       from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    /* Arabic font fallback */
     .font-arabic {
       font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    /* Range Slider Styling */
     input[type=range] {
       -webkit-appearance: none;
       background: transparent;
@@ -197,8 +195,7 @@ import { FleetService, Vehicle } from './services/fleet.service';
               
               <!-- Vehicle Card -->
               <div class="group relative bg-[#141210] border border-[#292524] transition-all duration-300 animate-fade-in flex flex-col md:flex-row shadow-lg hover:shadow-[0_0_30px_rgba(0,0,0,0.5)]"
-                   [class.border-[#d4af37]]="editingId() === vehicle.id"
-                   [class.hover:border-[#d4af37]/50]="editingId() !== vehicle.id">
+                   [class]="editingId() === vehicle.id ? 'border-[#d4af37]' : 'hover:border-[#d4af37]/50'">
                 
                 <!-- Card Decorative Corner -->
                 <div class="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-[#1c1917] border-l-[40px] border-l-transparent"></div>
