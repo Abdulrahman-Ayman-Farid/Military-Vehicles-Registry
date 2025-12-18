@@ -30,7 +30,7 @@ export class FleetService {
     }
   }
 
-  async addVehicle(designation: string, type: string): Promise<void> {
+  async addVehicle(designation: string, type: string, category: Vehicle['category']): Promise<void> {
     this.isLoading.set(true);
     
     // Auto-generate some metadata for simplicity
@@ -40,6 +40,7 @@ export class FleetService {
       id: crypto.randomUUID(),
       designation,
       type,
+      category,
       status: 'ACTIVE',
       serialNumber: this.generateSerial(),
       timestamp: Date.now(),
@@ -93,6 +94,36 @@ export class FleetService {
       await this.backend.updateVehicleStatus(id, newStatus);
     } catch (err) {
       this.error.set('Status update failed');
+    }
+  }
+
+  // === DATA RETENTION PROTOCOLS ===
+
+  downloadBackup(): void {
+    const data = this.backend.getRawData();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `IMPERIAL_REGISTRY_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+  async uploadBackup(file: File): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const text = await file.text();
+      this.backend.importData(text);
+      await this.loadFleet(); // Reload state from the new DB data
+    } catch (e) {
+      this.error.set('Restoration Protocol Failed: Corrupt Data');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 

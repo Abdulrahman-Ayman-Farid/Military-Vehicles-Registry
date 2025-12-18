@@ -127,6 +127,8 @@ import { FleetService, Vehicle } from './services/fleet.service';
             </div>
             
             <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="space-y-6">
+              
+              <!-- Designation -->
               <div class="space-y-2">
                 <div class="flex justify-between">
                    <label class="text-[10px] uppercase text-[#d4af37] tracking-wider">Designation</label>
@@ -140,6 +142,23 @@ import { FleetService, Vehicle } from './services/fleet.service';
                 >
               </div>
               
+              <!-- Category -->
+              <div class="space-y-2">
+                 <div class="flex justify-between">
+                   <label class="text-[10px] uppercase text-[#d4af37] tracking-wider">Domain</label>
+                   <label class="text-sm font-arabic text-stone-400">النطاق</label>
+                </div>
+                <select 
+                  formControlName="category"
+                  class="w-full bg-[#0c0a09] border border-stone-800 text-stone-200 px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition-colors uppercase cursor-pointer"
+                >
+                  <option value="LAND">LAND / بري</option>
+                  <option value="AIR">AIR / جوي</option>
+                  <option value="SEA">SEA / بحري</option>
+                </select>
+              </div>
+
+              <!-- Type -->
               <div class="space-y-2">
                  <div class="flex justify-between">
                    <label class="text-[10px] uppercase text-[#d4af37] tracking-wider">Class</label>
@@ -184,6 +203,38 @@ import { FleetService, Vehicle } from './services/fleet.service';
              </div>
           </div>
 
+           <!-- Data Logistics (New) -->
+           <div class="bg-[#141210] border border-[#292524] p-6 flex flex-col gap-4 shadow-lg group">
+             <div class="flex items-center justify-between border-b border-[#292524] pb-2">
+                <span class="text-[10px] uppercase text-[#d4af37] tracking-widest">Data Retention</span>
+                <span class="text-xs font-arabic font-bold text-[#78716c]">النسخ الاحتياطي</span>
+             </div>
+             <div class="flex gap-2">
+                <button 
+                  (click)="exportData()"
+                  class="flex-1 py-2 bg-[#1c1917] border border-stone-700 text-stone-300 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export
+                </button>
+                <button 
+                  (click)="fileInput.click()"
+                  class="flex-1 py-2 bg-[#1c1917] border border-stone-700 text-stone-300 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Restore
+                </button>
+                <input #fileInput type="file" class="hidden" (change)="handleImport($event)" accept=".json">
+             </div>
+             <p class="text-[9px] text-stone-600 text-center uppercase tracking-wider leading-tight">
+               Auto-save protocols active.<br>Data persists after shutdown.
+             </p>
+           </div>
+
         </div>
 
         <!-- Main Content: List -->
@@ -211,6 +262,8 @@ import { FleetService, Vehicle } from './services/fleet.service';
                    <option value="ID">ID / المعرف</option>
                    <option value="FUEL_LOW">Low Fuel / وقود منخفض</option>
                    <option value="TYPE">Class / الفئة</option>
+                   <option value="CATEGORY_ASC">Category (Asc) / النطاق ↑</option>
+                   <option value="CATEGORY_DESC">Category (Desc) / النطاق ↓</option>
                  </select>
                </div>
              </div>
@@ -299,6 +352,15 @@ import { FleetService, Vehicle } from './services/fleet.service';
                         <label class="text-[10px] text-[#a8a29e] uppercase tracking-wider block">Class / الفئة</label>
                         <input formControlName="type" type="text" class="w-full bg-black/50 border border-stone-700 text-stone-200 px-3 py-2 uppercase font-bold focus:outline-none focus:border-[#d4af37]">
                       </div>
+                      <!-- Category -->
+                       <div class="space-y-1">
+                        <label class="text-[10px] text-[#a8a29e] uppercase tracking-wider block">Domain / النطاق</label>
+                        <select formControlName="category" class="w-full bg-black/50 border border-stone-700 text-stone-200 px-3 py-2 font-bold focus:outline-none focus:border-[#d4af37]">
+                           <option value="LAND">LAND / بري</option>
+                           <option value="AIR">AIR / جوي</option>
+                           <option value="SEA">SEA / بحري</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -334,7 +396,10 @@ import { FleetService, Vehicle } from './services/fleet.service';
                      <div class="absolute top-0 left-0 w-1 h-full" [class]="getBorderColor(vehicle.status)"></div>
 
                     <div>
-                      <div class="text-[#d4af37] text-sm font-mono font-bold tracking-tight mb-2 opacity-80">{{ vehicle.serialNumber }}</div>
+                      <div class="flex justify-between items-start">
+                         <div class="text-[#d4af37] text-sm font-mono font-bold tracking-tight mb-2 opacity-80">{{ vehicle.serialNumber }}</div>
+                         <div class="text-[10px] text-[#a8a29e] border border-stone-800 px-1.5 py-0.5 rounded uppercase">{{ vehicle.category }}</div>
+                      </div>
                       <div class="text-xl font-bold text-[#e7e5e4] uppercase leading-none mb-1 font-egypt">{{ vehicle.designation }}</div>
                       <div class="text-xs text-[#a8a29e] uppercase tracking-widest font-semibold">{{ vehicle.type }}</div>
                     </div>
@@ -452,12 +517,13 @@ export class AppComponent {
   
   // Categorization and Sorting
   filterStatus = signal<'ALL' | 'ACTIVE' | 'DEPLOYED' | 'MAINTENANCE'>('ALL');
-  sortBy = signal<'ID' | 'FUEL_LOW' | 'TYPE'>('ID');
+  sortBy = signal<'ID' | 'FUEL_LOW' | 'TYPE' | 'CATEGORY_ASC' | 'CATEGORY_DESC'>('ID');
 
   // Add Vehicle Form
   addForm = this.fb.group({
     designation: ['', [Validators.required, Validators.minLength(2)]],
-    type: ['', [Validators.required, Validators.minLength(2)]]
+    type: ['', [Validators.required, Validators.minLength(2)]],
+    category: ['LAND' as Vehicle['category'], [Validators.required]]
   });
 
   // Edit Vehicle Form
@@ -468,6 +534,7 @@ export class AppComponent {
     serialNumber: ['', Validators.required],
     designation: ['', Validators.required],
     type: ['', Validators.required],
+    category: ['LAND' as Vehicle['category'], Validators.required],
     operator: ['', Validators.required],
     lastMaintained: ['', Validators.required],
     fuelLevel: [0, [Validators.min(0), Validators.max(100)]],
@@ -497,7 +564,8 @@ export class AppComponent {
         v.designation.toLowerCase().includes(term) || 
         v.type.toLowerCase().includes(term) ||
         v.serialNumber.toLowerCase().includes(term) ||
-        v.operator.toLowerCase().includes(term)
+        v.operator.toLowerCase().includes(term) ||
+        v.category.toLowerCase().includes(term)
       );
     }
 
@@ -506,6 +574,8 @@ export class AppComponent {
       switch (sort) {
         case 'FUEL_LOW': return a.fuelLevel - b.fuelLevel; // Ascending Fuel (Lowest first)
         case 'TYPE': return a.type.localeCompare(b.type);
+        case 'CATEGORY_ASC': return a.category.localeCompare(b.category);
+        case 'CATEGORY_DESC': return b.category.localeCompare(a.category);
         case 'ID': 
         default: return a.serialNumber.localeCompare(b.serialNumber);
       }
@@ -516,7 +586,7 @@ export class AppComponent {
     this.filterStatus.set(status);
   }
 
-  setSort(sort: 'ID' | 'FUEL_LOW' | 'TYPE'): void {
+  setSort(sort: 'ID' | 'FUEL_LOW' | 'TYPE' | 'CATEGORY_ASC' | 'CATEGORY_DESC'): void {
     this.sortBy.set(sort);
   }
 
@@ -524,12 +594,25 @@ export class AppComponent {
     return this.fleetService.vehicles().filter(v => v.status === status).length;
   }
 
+  // Backup & Restore Handlers
+  exportData() {
+    this.fleetService.downloadBackup();
+  }
+
+  handleImport(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.fleetService.uploadBackup(input.files[0]);
+      input.value = ''; // Reset input so same file can be selected again if needed
+    }
+  }
+
   async onSubmit() {
     if (this.addForm.valid && !this.isLoading()) {
-      const { designation, type } = this.addForm.value;
-      if (designation && type) {
-        await this.fleetService.addVehicle(designation, type);
-        this.addForm.reset({ designation: '', type: '' });
+      const { designation, type, category } = this.addForm.value;
+      if (designation && type && category) {
+        await this.fleetService.addVehicle(designation, type, category);
+        this.addForm.reset({ designation: '', type: '', category: 'LAND' });
       }
     }
   }
@@ -550,6 +633,7 @@ export class AppComponent {
       serialNumber: vehicle.serialNumber,
       designation: vehicle.designation,
       type: vehicle.type,
+      category: vehicle.category,
       operator: vehicle.operator,
       lastMaintained: vehicle.lastMaintained,
       fuelLevel: vehicle.fuelLevel,

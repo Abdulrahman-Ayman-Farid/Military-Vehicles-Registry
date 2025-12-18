@@ -4,6 +4,7 @@ export interface Vehicle {
   id: string;
   designation: string; 
   type: string;        
+  category: 'LAND' | 'AIR' | 'SEA';
   status: 'ACTIVE' | 'MAINTENANCE' | 'DEPLOYED';
   serialNumber: string;
   timestamp: number;
@@ -17,7 +18,8 @@ export interface Vehicle {
   providedIn: 'root'
 })
 export class BackendService {
-  private readonly DB_KEY = 'IMPERIAL_FLEET_DB_V3'; // Version bump to reset data for new fields
+  // Updated key to denote persistent storage requirement
+  private readonly DB_KEY = 'IMPERIAL_FLEET_DATA_PERSISTENT';
   private readonly LATENCY_MS = 600;
 
   constructor() {}
@@ -43,7 +45,6 @@ export class BackendService {
     this.saveInternal(updated);
   }
 
-  // New method for full vehicle update
   async updateVehicle(updatedVehicle: Vehicle): Promise<void> {
     await this.delay();
     const current = await this.getInternal();
@@ -58,12 +59,32 @@ export class BackendService {
     this.saveInternal(updated);
   }
 
+  // Backup Protocol: Retrieve raw JSON string
+  getRawData(): string {
+    return localStorage.getItem(this.DB_KEY) || '[]';
+  }
+
+  // Restore Protocol: Overwrite DB with validated JSON
+  importData(jsonData: string): void {
+    try {
+      const parsed = JSON.parse(jsonData);
+      if (Array.isArray(parsed)) {
+        this.saveInternal(parsed);
+      } else {
+        throw new Error('Invalid Data Structure');
+      }
+    } catch (e) {
+      throw new Error('Data Corruption Detected');
+    }
+  }
+
   private async getInternal(): Promise<Vehicle[]> {
     const data = localStorage.getItem(this.DB_KEY);
     return data ? JSON.parse(data) : [];
   }
 
   private saveInternal(data: Vehicle[]): void {
+    // This is the critical line that persists data to the machine's drive
     localStorage.setItem(this.DB_KEY, JSON.stringify(data));
   }
 
