@@ -1,0 +1,227 @@
+<div class="min-h-screen bg-[#0c0a09] bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] p-6 text-stone-300 relative">
+  
+  <!-- Global Loading Overlay -->
+  @if (isLoading()) {
+    <div class="fixed top-0 left-0 w-full h-1 bg-stone-800 z-50">
+      <div class="h-full bg-[#d4af37] animate-progress"></div>
+    </div>
+  }
+
+  <!-- Header Section -->
+  <header class="mb-12 max-w-5xl mx-auto border-b border-[#292524] pb-6 relative">
+    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-50"></div>
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div>
+        <h1 class="font-egypt text-4xl font-bold tracking-widest text-[#d4af37] uppercase mb-1 drop-shadow-[0_2px_10px_rgba(212,175,55,0.2)]">
+          Imperial Registry
+        </h1>
+        <div class="flex items-center gap-2">
+           <span class="h-[1px] w-8 bg-[#78350f]"></span>
+           <p class="text-xs text-[#a8a29e] font-mono tracking-[0.2em] uppercase">
+            Pharaoh_Node_01 • Sector Giza
+          </p>
+           <span class="h-[1px] w-8 bg-[#78350f]"></span>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2 text-xs font-mono text-[#d4af37] border border-[#d4af37]/30 px-4 py-2 rounded-sm bg-[#d4af37]/5 backdrop-blur-sm">
+        <span class="block w-2 h-2 rotate-45 bg-[#d4af37] animate-pulse"></span>
+        @if(isLoading()) { ESTABLISHING UPLINK... } @else { SCARAB LINK ONLINE }
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
+    
+    <!-- Left Column: Controls (Add & Search) -->
+    <div class="lg:col-span-4 space-y-8">
+      
+      <!-- Search Module -->
+      <section class="bg-[#141210] border border-[#292524] p-6 relative overflow-hidden group shadow-lg shadow-black/50">
+        <!-- Decor corner -->
+        <div class="absolute top-0 left-0 w-0 h-0 border-l-[30px] border-l-[#d4af37]/20 border-b-[30px] border-b-transparent"></div>
+
+        <label class="text-xs uppercase font-egypt font-bold text-[#a8a29e] mb-3 block tracking-widest flex items-center gap-2">
+          <span class="text-[#d4af37]">◈</span> Locate Asset
+        </label>
+        <div class="relative group-focus-within:text-[#d4af37] transition-colors">
+          <input 
+            type="text" 
+            [formControl]="searchControl"
+            placeholder="SEARCH ID..." 
+            class="w-full bg-[#0c0a09] border-b border-[#44403c] text-[#d4af37] px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition-all placeholder-[#57534e] font-mono uppercase"
+          >
+          <div class="absolute right-2 top-3 text-[#57534e]">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+             </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add Vehicle Form -->
+      <section class="bg-[#141210] border-y border-[#d4af37]/20 p-6 relative shadow-lg shadow-black/50">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0c0a09] px-4 text-[#d4af37] font-egypt text-xs tracking-widest border border-[#d4af37]/20">
+          NEW CHARIOT
+        </div>
+        
+        <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="space-y-6 mt-2">
+          <div class="relative">
+            <input 
+              type="text" 
+              formControlName="designation"
+              id="designation"
+              class="peer w-full bg-transparent border border-[#44403c] text-[#e7e5e4] px-3 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition-colors placeholder-transparent font-mono uppercase"
+              placeholder="Designation"
+            >
+            <label for="designation" class="absolute left-3 -top-2.5 bg-[#141210] px-1 text-[10px] text-[#78716c] peer-focus:text-[#d4af37] transition-colors uppercase tracking-wider">
+              Designation
+            </label>
+          </div>
+          
+          <div class="relative">
+            <input 
+              type="text" 
+              formControlName="type"
+              id="type"
+              class="peer w-full bg-transparent border border-[#44403c] text-[#e7e5e4] px-3 py-3 text-sm focus:outline-none focus:border-[#d4af37] transition-colors placeholder-transparent font-mono uppercase"
+              placeholder="Class"
+            >
+             <label for="type" class="absolute left-3 -top-2.5 bg-[#141210] px-1 text-[10px] text-[#78716c] peer-focus:text-[#d4af37] transition-colors uppercase tracking-wider">
+              Classification
+            </label>
+          </div>
+
+          <button 
+            type="submit"
+            [disabled]="addForm.invalid || isLoading()"
+            class="w-full bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 hover:border-[#d4af37] py-4 px-4 text-xs font-bold uppercase tracking-[0.2em] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 group relative overflow-hidden"
+          >
+            <span class="relative z-10 font-egypt font-bold">
+              @if(isLoading()) { Inscribing... } @else { Inscribe Record }
+            </span>
+            <div class="absolute inset-0 bg-[#d4af37]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          </button>
+        </form>
+      </section>
+      
+      <!-- System Stats -->
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="border border-[#292524] p-4 bg-[#141210] relative">
+          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent"></div>
+          <div class="text-[10px] text-[#a8a29e] uppercase tracking-widest mb-1">Total Assets</div>
+          <div class="text-2xl text-[#d4af37] font-egypt">{{ filteredVehicles().length }}</div>
+        </div>
+        <div class="border border-[#292524] p-4 bg-[#141210] relative">
+          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent"></div>
+          <div class="text-[10px] text-[#a8a29e] uppercase tracking-widest mb-1">Defense Level</div>
+          <div class="text-2xl text-[#0ea5e9] font-egypt">MAX</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: List -->
+    <div class="lg:col-span-8">
+      
+      <div class="flex items-center justify-between mb-6 border-b border-[#292524] pb-2">
+        <h2 class="text-sm font-egypt font-bold uppercase tracking-widest text-[#d4af37]">
+          Registry Scroll
+        </h2>
+        <div class="text-[10px] font-mono text-[#78716c]">
+          SUN CYCLE: {{ '45.2.1' }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (vehicle of filteredVehicles(); track vehicle.id) {
+          <div class="group relative bg-[#141210] border border-[#292524] hover:border-[#d4af37]/50 p-6 transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/20 animate-fade-in">
+            
+            <!-- Egyptian Corners -->
+            <div class="absolute top-0 left-0 w-3 h-3 border-l-2 border-t-2 border-[#44403c] group-hover:border-[#d4af37] transition-colors"></div>
+            <div class="absolute top-0 right-0 w-3 h-3 border-r-2 border-t-2 border-[#44403c] group-hover:border-[#d4af37] transition-colors"></div>
+            <div class="absolute bottom-0 left-0 w-3 h-3 border-l-2 border-b-2 border-[#44403c] group-hover:border-[#d4af37] transition-colors"></div>
+            <div class="absolute bottom-0 right-0 w-3 h-3 border-r-2 border-b-2 border-[#44403c] group-hover:border-[#d4af37] transition-colors"></div>
+
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-lg font-bold text-[#e7e5e4] tracking-wide uppercase font-egypt group-hover:text-[#d4af37] transition-colors">{{ vehicle.designation }}</h3>
+                <div class="text-[10px] text-[#78716c] uppercase tracking-wider font-mono mt-1">
+                  ID: <span class="text-[#a8a29e]">{{ vehicle.serialNumber }}</span>
+                </div>
+              </div>
+              <button 
+                (click)="deleteVehicle(vehicle.id)"
+                class="text-[#44403c] hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                title="Exile Unit"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <div class="flex items-center justify-between text-xs border-b border-[#292524] pb-2">
+                <span class="text-[#78716c] uppercase tracking-wider">Class</span>
+                <span class="text-[#d6d3d1] font-mono">{{ vehicle.type }}</span>
+              </div>
+              
+              <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-[#78716c] uppercase tracking-wider">State</span>
+                <button 
+                  (click)="cycleStatus(vehicle.id, vehicle.status)"
+                  class="font-mono text-[10px] px-3 py-1 border uppercase tracking-widest transition-all hover:scale-105"
+                  [class]="getStatusColor(vehicle.status)"
+                >
+                  {{ vehicle.status }}
+                </button>
+              </div>
+            </div>
+            
+            <!-- Center decorative glyph opacity -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+               <svg viewBox="0 0 100 100" class="w-24 h-24 fill-current text-[#d4af37]">
+                 <path d="M50 0 L100 100 L50 80 L0 100 Z" />
+               </svg>
+            </div>
+
+          </div>
+        } @empty {
+          <div class="col-span-full py-16 flex flex-col items-center justify-center text-[#57534e] border border-dashed border-[#292524] bg-[#141210]/50">
+             @if(isLoading()) {
+               <div class="w-8 h-8 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin mb-4"></div>
+               <p class="text-sm font-egypt uppercase tracking-widest text-[#a8a29e]">Consulting the Archives...</p>
+             } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mb-4 opacity-40 text-[#d4af37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <p class="text-sm font-egypt uppercase tracking-widest text-[#a8a29e]">The Sands are Empty</p>
+              <p class="text-xs mt-2 font-mono">Inscribe a new chariot to begin</p>
+             }
+          </div>
+        }
+      </div>
+
+    </div>
+  </main>
+  
+  <style>
+    @keyframes progress {
+      0% { width: 0%; opacity: 1; }
+      50% { width: 70%; opacity: 1; }
+      100% { width: 100%; opacity: 0; }
+    }
+    .animate-progress {
+      animation: progress 1s ease-in-out infinite;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</div>

@@ -1,0 +1,5 @@
+{
+  "name": "Military Fleet Registry",
+  "description": "A tactical vehicle management system with persistence and real-time filtering.",
+  "requestFramePermissions": []
+}
