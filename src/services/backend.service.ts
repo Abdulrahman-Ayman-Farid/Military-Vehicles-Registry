@@ -7,25 +7,27 @@ export interface Vehicle {
   status: 'ACTIVE' | 'MAINTENANCE' | 'DEPLOYED';
   serialNumber: string;
   timestamp: number;
+  // New Metadata
+  operator: string;
+  fuelLevel: number;
+  lastMaintained: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class BackendService {
-  private readonly DB_KEY = 'IMPERIAL_FLEET_DB_V2';
-  private readonly LATENCY_MS = 800; // Simulate network delay
+  private readonly DB_KEY = 'IMPERIAL_FLEET_DB_V3'; // Version bump to reset data for new fields
+  private readonly LATENCY_MS = 600;
 
   constructor() {}
 
-  // Simulate GET /vehicles
   async getVehicles(): Promise<Vehicle[]> {
     await this.delay();
     const data = localStorage.getItem(this.DB_KEY);
     return data ? JSON.parse(data) : [];
   }
 
-  // Simulate POST /vehicles
   async createVehicle(vehicle: Vehicle): Promise<Vehicle> {
     await this.delay();
     const current = await this.getInternal();
@@ -34,7 +36,6 @@ export class BackendService {
     return vehicle;
   }
 
-  // Simulate DELETE /vehicles/:id
   async deleteVehicle(id: string): Promise<void> {
     await this.delay();
     const current = await this.getInternal();
@@ -42,7 +43,14 @@ export class BackendService {
     this.saveInternal(updated);
   }
 
-  // Simulate PATCH /vehicles/:id
+  // New method for full vehicle update
+  async updateVehicle(updatedVehicle: Vehicle): Promise<void> {
+    await this.delay();
+    const current = await this.getInternal();
+    const updated = current.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
+    this.saveInternal(updated);
+  }
+
   async updateVehicleStatus(id: string, status: Vehicle['status']): Promise<void> {
     await this.delay();
     const current = await this.getInternal();
