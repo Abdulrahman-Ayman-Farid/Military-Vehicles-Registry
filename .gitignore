@@ -27,3 +27,14 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Additional environment files (contain secrets - never commit)
+.env.production
+.env.staging
+.env.development
+
+# Secret files (any file with .secret extension)
+*.secret
+
+# Generated artifacts directory
+generated/
