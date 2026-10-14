@@ -1,0 +1,15 @@
+node_modules
+dist
+.next
+.git
+.env
+.env.local
+*.md
+docs
+generated
+.vscode
+.idea
+*.log
+npm-debug.log*
+yarn-debug.log*
+.DS_Store

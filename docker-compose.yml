@@ -1,0 +1,51 @@
+# Docker Compose orchestration for the Military Vehicles Registry (Angular SPA).
+#
+# Networking note:
+#   In Docker Compose, this service is reachable internally by other services
+#   on the default Compose network using its container name "app" on port 3000
+#   (e.g. http://app:3000). This is analogous to a Kubernetes ClusterIP
+#   Service: it provides stable in-network addressing without exposing the
+#   service to the host. The "ports" mapping below additionally publishes
+#   3000 to the host for local development access. To make this purely
+#   internal (ClusterIP-style), remove the "ports" mapping and rely solely on
+#   the Compose internal network — other containers will still reach it at
+#   http://app:3000.
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # -------------------------------------------------------------------------
+    # Secret injection — local development only.
+    #
+    # In production (Kubernetes), secrets are NEVER passed via .env files.
+    # Instead, credentials are injected at runtime via:
+    #   - Kubernetes Secrets mounted as environment variables (envFrom)
+    #   - ExternalSecrets Operator syncing from HashiCorp Vault
+    #     (see k8s/cluster-secret-store.yaml and k8s/external-secret.yaml)
+    #   - The Kubernetes service account token for Vault authentication
+    #
+    # The .env file below is for local Docker Compose development only and
+    # must not contain real production credentials.
+    # -------------------------------------------------------------------------
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first

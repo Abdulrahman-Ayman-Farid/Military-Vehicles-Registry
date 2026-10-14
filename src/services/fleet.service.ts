@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { BackendService, Vehicle } from './backend.service';
 
-export { Vehicle };
+export type { Vehicle };
 
 @Injectable({
   providedIn: 'root'
